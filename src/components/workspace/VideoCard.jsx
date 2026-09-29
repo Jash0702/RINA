@@ -105,7 +105,7 @@ export const VideoCard = ({ slot, videoRef, isPlaying, onTogglePlay }) => {
         {hasError && (
           <div className="video-error-overlay">
             <Icon name="alert" />
-            <p>Could not play video ({videoName})</p>
+            <p>Could not play video</p>
             <button
               type="button"
               className="button ghost sm"
@@ -115,13 +115,6 @@ export const VideoCard = ({ slot, videoRef, isPlaying, onTogglePlay }) => {
             </button>
           </div>
         )}
-
-        <div className="player-file-indicator">
-          <span className="player-file-pill">
-            <span className="file-icon-dot" />
-            {videoName}
-          </span>
-        </div>
       </div>
     </article>
   );
