@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Generates smooth 60fps ECG waveform favicon frames dynamically on an offscreen canvas.
@@ -123,6 +123,22 @@ const framesCache = {
   light: null,
 };
 
+// Background Web Worker script to bypass Chrome/Firefox background tab throttling
+const workerCode = `
+  let intervalId = null;
+  self.onmessage = function(e) {
+    if (e.data.action === 'start') {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = setInterval(function() {
+        self.postMessage('tick');
+      }, e.data.interval || 50);
+    } else if (e.data.action === 'stop') {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+`;
+
 export const useAnimatedFavicon = (frameInterval = 50) => {
   const [isSystemDark, setIsSystemDark] = useState(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
@@ -130,8 +146,6 @@ export const useAnimatedFavicon = (frameInterval = 50) => {
     }
     return true; // Default fallback to dark system theme
   });
-
-  const frameIndexRef = useRef(0);
 
   // Real-time listener for user's OS / system theme changes
   useEffect(() => {
@@ -142,7 +156,6 @@ export const useAnimatedFavicon = (frameInterval = 50) => {
       setIsSystemDark(e.matches);
     };
 
-    // Modern and legacy event listener support
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
     } else if (mediaQuery.addListener) {
@@ -158,10 +171,8 @@ export const useAnimatedFavicon = (frameInterval = 50) => {
     };
   }, []);
 
-  // Animate favicon frames based strictly on system theme
+  // Animate favicon frames based strictly on system theme with Web Worker unthrottled timer
   useEffect(() => {
-    // If system is Dark (black tabs): use crisp White icon (#FFFFFF)
-    // If system is Light (white tabs): use crisp Black icon (#000000)
     const color = isSystemDark ? '#FFFFFF' : '#000000';
     const cacheKey = isSystemDark ? 'dark' : 'light';
 
@@ -179,14 +190,50 @@ export const useAnimatedFavicon = (frameInterval = 50) => {
       document.head.appendChild(link);
     }
 
-    // Set initial frame immediately upon system theme detection
-    link.href = currentFrames[frameIndexRef.current % currentFrames.length];
+    const startTime = Date.now();
+    let worker = null;
+    let fallbackIntervalId = null;
+    let workerUrl = null;
 
-    const intervalId = setInterval(() => {
-      frameIndexRef.current = (frameIndexRef.current + 1) % currentFrames.length;
-      link.href = currentFrames[frameIndexRef.current];
-    }, frameInterval);
+    const updateFrame = () => {
+      // Wall-clock timestamp ensures exact smooth speed even when switching tabs
+      const elapsed = Date.now() - startTime;
+      const frameIndex = Math.floor(elapsed / frameInterval) % currentFrames.length;
+      link.href = currentFrames[frameIndex];
+    };
 
-    return () => clearInterval(intervalId);
+    // Set initial frame immediately
+    updateFrame();
+
+    try {
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      workerUrl = URL.createObjectURL(blob);
+      worker = new Worker(workerUrl);
+      worker.onmessage = updateFrame;
+      worker.postMessage({ action: 'start', interval: frameInterval });
+    } catch (e) {
+      // Fallback timer if Web Workers are restricted
+      fallbackIntervalId = setInterval(updateFrame, frameInterval);
+    }
+
+    // Instant sync whenever user switches back to this tab
+    const handleVisibilityChange = () => {
+      updateFrame();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (worker) {
+        worker.postMessage({ action: 'stop' });
+        worker.terminate();
+      }
+      if (workerUrl) {
+        URL.revokeObjectURL(workerUrl);
+      }
+      if (fallbackIntervalId) {
+        clearInterval(fallbackIntervalId);
+      }
+    };
   }, [isSystemDark, frameInterval]);
 };
