@@ -3597,6 +3597,11 @@ dialog.dialog-shell::backdrop {
     aspect-ratio: 16 / 9;
   }
 
+  /* Hide Layout Mode switch on Mobile */
+  .wm-view-tools {
+    display: none !important;
+  }
+
   /* Presentation Steps & Intelligence Grid */
   .bento-steps-grid {
     grid-template-columns: 1fr !important;
@@ -3750,30 +3755,12 @@ dialog.dialog-shell::backdrop {
 
   .wm-workspace-tools {
     width: 100%;
-    flex-direction: column;
-    gap: 8px;
+    display: flex;
+    justify-content: flex-end;
   }
 
   .wm-view-tools {
-    width: 100%;
-  }
-
-  .wm-view-switch-animated {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .switch-tab {
-    flex: 1;
-    padding: 4px 6px;
-    font-size: 10px;
-    gap: 3px;
-  }
-
-  .switch-tab svg {
-    width: 12px;
-    height: 12px;
+    display: none !important;
   }
 
   /* ICU Patient Monitor Mobile Reflow */
