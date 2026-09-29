@@ -18,14 +18,27 @@ export const VitalsMonitorWidget = ({ isPlaying, currentTime }) => {
 
   const canvasRef = useRef(null);
   const animFrameRef = useRef(null);
-  const sweepXRef = useRef(0);
-  const timeStepRef = useRef(0);
+  const stateRef = useRef({
+    isPlaying,
+    currentTime,
+    caseId: activeCase.id
+  });
 
-  // Dynamic Case & Playback telemetry fluctuation
+  // Keep stateRef up to date without triggering canvas re-renders
+  useEffect(() => {
+    stateRef.current = {
+      isPlaying,
+      currentTime,
+      caseId: activeCase.id
+    };
+  }, [isPlaying, currentTime, activeCase.id]);
+
+  // Periodic subtle realistic physiological telemetry drift
   useEffect(() => {
     const interval = setInterval(() => {
-      const isAgitated = activeCase.id === 'agitation' && currentTime > 4 && currentTime < 16;
-      const isExtubation = activeCase.id === 'extubation' && currentTime > 6;
+      const { caseId, currentTime: currTime } = stateRef.current;
+      const isAgitated = caseId === 'agitation' && currTime > 4 && currTime < 16;
+      const isExtubation = caseId === 'extubation' && currTime > 6;
 
       const targetHr = isAgitated ? 98 : isExtubation ? 104 : 74;
       const targetRr = isAgitated ? 26 : isExtubation ? 28 : 18;
@@ -43,145 +56,200 @@ export const VitalsMonitorWidget = ({ isPlaying, currentTime }) => {
     }, 1400);
 
     return () => clearInterval(interval);
-  }, [isPlaying, currentTime, activeCase.id]);
+  }, []);
 
-  // High-Performance 60FPS CRT/LCD Sweep Oscilloscope Canvas
+  // Continuous Full-Buffer Oscilloscope Canvas Engine
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let width = (canvas.width = canvas.parentElement?.clientWidth || 700);
+    let width = (canvas.width = canvas.parentElement?.clientWidth || 800);
     let height = (canvas.height = 140);
 
     const handleResize = () => {
       if (!canvas || !canvas.parentElement) return;
-      width = canvas.width = canvas.parentElement.clientWidth || 700;
-      height = canvas.height = 140;
+      const newWidth = canvas.parentElement.clientWidth || 800;
+      if (newWidth !== width) {
+        width = canvas.width = newWidth;
+        height = canvas.height = 140;
+        initBuffers(width);
+      }
     };
     window.addEventListener('resize', handleResize);
 
-    // Initial background grid
-    ctx.fillStyle = '#050a14';
-    ctx.fillRect(0, 0, width, height);
+    // Baseline horizontal track offsets
+    const ch1Y = 24;  // ECG Lead II
+    const ch2Y = 70;  // SpO2 Pleth
+    const ch3Y = 116; // Resp / CO2
 
-    // Waveform baseline heights
-    // Channel 1: ECG (height 0 -> 46)
-    // Channel 2: SpO2 Pleth (height 47 -> 93)
-    // Channel 3: Resp / CO2 (height 94 -> 140)
-    const ch1Y = 24;
-    const ch2Y = 70;
-    const ch3Y = 116;
+    // Circular data buffers for continuous sweep plotting
+    let ecgBuffer = new Float32Array(width);
+    let spo2Buffer = new Float32Array(width);
+    let respBuffer = new Float32Array(width);
 
-    const speed = 2.2; // sweep velocity
-    const eraseWidth = 24;
+    const initBuffers = (w) => {
+      ecgBuffer = new Float32Array(w);
+      spo2Buffer = new Float32Array(w);
+      respBuffer = new Float32Array(w);
+
+      // Pre-fill with baseline values so monitor is active on initial load
+      for (let i = 0; i < w; i++) {
+        const t = i * 0.04;
+        const ecgCycle = (t * 3.6) % (Math.PI * 2);
+        let e = 0;
+        if (ecgCycle > 0.8 && ecgCycle < 1.2) e = Math.sin((ecgCycle - 0.8) / 0.4 * Math.PI) * 3.5;
+        else if (ecgCycle >= 1.35 && ecgCycle < 1.45) e = -4;
+        else if (ecgCycle >= 1.45 && ecgCycle < 1.6) e = 20;
+        else if (ecgCycle >= 1.6 && ecgCycle < 1.75) e = -6;
+        else if (ecgCycle > 2.0 && ecgCycle < 2.8) e = Math.sin((ecgCycle - 2.0) / 0.8 * Math.PI) * 6;
+        ecgBuffer[i] = e;
+
+        const plethCycle = (t * 3.6 - 0.6) % (Math.PI * 2);
+        let p = 0;
+        if (plethCycle >= 0 && plethCycle < Math.PI * 1.2) {
+          const norm = plethCycle / (Math.PI * 1.2);
+          p = Math.sin(norm * Math.PI) * 13;
+          if (norm > 0.45 && norm < 0.7) p += Math.sin((norm - 0.45) / 0.25 * Math.PI) * 3.2;
+        }
+        spo2Buffer[i] = p;
+
+        respBuffer[i] = Math.sin(t * 1.1) * 11 + Math.sin(t * 2.2) * 2;
+      }
+    };
+
+    initBuffers(width);
+
+    let sweepHead = 0;
+    let timeStep = 0;
+    const sweepGap = 24; // Width of the erase gap ahead of the sweep beam
 
     const render = () => {
-      let x = sweepXRef.current;
-      timeStepRef.current += 0.04;
-      const t = timeStepRef.current;
+      const { caseId, currentTime: currTime } = stateRef.current;
+      const isAgitated = caseId === 'agitation' && currTime > 4 && currTime < 16;
+      const hrMultiplier = isAgitated ? 1.35 : 1.0;
 
-      const isAgitated = activeCase.id === 'agitation' && currentTime > 4 && currentTime < 16;
-      const hrSpeed = isAgitated ? 1.35 : 1.0;
+      // Advance 2-3 points per animation frame for smooth, realistic clinical sweep speed
+      const pointsPerFrame = 2;
 
-      // 1. Erase ahead of the sweep beam with phosphor fade effect
+      for (let p = 0; p < pointsPerFrame; p++) {
+        timeStep += 0.035 * hrMultiplier;
+        const t = timeStep;
+
+        // 1. ECG Lead II (P-Q-R-S-T)
+        const ecgCycle = (t * 3.8) % (Math.PI * 2);
+        let ecgVal = 0;
+        if (ecgCycle > 0.8 && ecgCycle < 1.2) {
+          ecgVal = Math.sin((ecgCycle - 0.8) / 0.4 * Math.PI) * 3.5;
+        } else if (ecgCycle >= 1.35 && ecgCycle < 1.45) {
+          ecgVal = -4.5;
+        } else if (ecgCycle >= 1.45 && ecgCycle < 1.6) {
+          ecgVal = 21;
+        } else if (ecgCycle >= 1.6 && ecgCycle < 1.75) {
+          ecgVal = -6.5;
+        } else if (ecgCycle > 2.0 && ecgCycle < 2.8) {
+          ecgVal = Math.sin((ecgCycle - 2.0) / 0.8 * Math.PI) * 6.5;
+        }
+        ecgVal += (Math.random() - 0.5) * 0.7; // subtle biological micro-noise
+
+        // 2. SpO2 Pleth
+        const plethCycle = (t * 3.8 - 0.6) % (Math.PI * 2);
+        let plethVal = 0;
+        if (plethCycle >= 0 && plethCycle < Math.PI * 1.2) {
+          const norm = plethCycle / (Math.PI * 1.2);
+          plethVal = Math.sin(norm * Math.PI) * 14;
+          if (norm > 0.45 && norm < 0.7) {
+            plethVal += Math.sin((norm - 0.45) / 0.25 * Math.PI) * 3.2;
+          }
+        }
+
+        // 3. Respiration Wave
+        const respVal = Math.sin(t * 1.1) * 12 + Math.sin(t * 2.2) * 2;
+
+        const writePos = (sweepHead + p) % width;
+        ecgBuffer[writePos] = ecgVal;
+        spo2Buffer[writePos] = plethVal;
+        respBuffer[writePos] = respVal;
+      }
+
+      sweepHead = (sweepHead + pointsPerFrame) % width;
+
+      // Clear Canvas and Redraw All Traces with High Contrast
       ctx.fillStyle = '#050a14';
-      ctx.fillRect(x, 0, eraseWidth, height);
+      ctx.fillRect(0, 0, width, height);
 
-      // Draw faint medical grid behind in the erased area
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      // Draw Medical Dot-Grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      for (let gy = 15; gy < height; gy += 15) {
-        ctx.moveTo(x, gy);
-        ctx.lineTo(x + eraseWidth, gy);
+      for (let y = 14; y < height; y += 14) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+      }
+      for (let x = 14; x < width; x += 14) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
       }
       ctx.stroke();
 
-      // Draw sweep beam laser head
-      ctx.fillStyle = 'rgba(0, 230, 118, 0.35)';
-      ctx.fillRect(x + eraseWidth - 2, 0, 2, 46);
-      ctx.fillStyle = 'rgba(0, 229, 255, 0.35)';
-      ctx.fillRect(x + eraseWidth - 2, 47, 2, 46);
-      ctx.fillStyle = 'rgba(255, 214, 0, 0.35)';
-      ctx.fillRect(x + eraseWidth - 2, 94, 2, 46);
+      // Function to draw a continuous waveform channel with a sweep eraser gap
+      const drawChannel = (buffer, baseY, color, glowColor) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 4;
 
-      // 2. Synthesize Real-Time Mathematical Waveforms
-      // A. ECG LEAD II (P-Q-R-S-T Complex)
-      const ecgCycle = (t * 3.8 * hrSpeed) % (Math.PI * 2);
-      let ecgVal = 0;
-      if (ecgCycle > 0.8 && ecgCycle < 1.2) {
-        // P-wave
-        ecgVal = Math.sin((ecgCycle - 0.8) / 0.4 * Math.PI) * 3.5;
-      } else if (ecgCycle >= 1.35 && ecgCycle < 1.45) {
-        // Q-drop
-        ecgVal = -4;
-      } else if (ecgCycle >= 1.45 && ecgCycle < 1.6) {
-        // R-spike
-        ecgVal = 20;
-      } else if (ecgCycle >= 1.6 && ecgCycle < 1.75) {
-        // S-drop
-        ecgVal = -6;
-      } else if (ecgCycle > 2.0 && ecgCycle < 2.8) {
-        // T-wave
-        ecgVal = Math.sin((ecgCycle - 2.0) / 0.8 * Math.PI) * 6;
-      }
-      // Micro biological noise
-      ecgVal += (Math.random() - 0.5) * 0.8;
+        // Segment 1: from (sweepHead + sweepGap) % width to width
+        // Segment 2: from 0 to sweepHead
+        const gapStart = sweepHead;
+        const gapEnd = (sweepHead + sweepGap) % width;
 
-      // B. SpO2 PLETHYSMOGRAM (Systolic rise + dicrotic notch rebound)
-      const plethCycle = (t * 3.8 * hrSpeed - 0.6) % (Math.PI * 2);
-      let plethVal = 0;
-      if (plethCycle >= 0 && plethCycle < Math.PI * 1.2) {
-        const norm = plethCycle / (Math.PI * 1.2);
-        plethVal = Math.sin(norm * Math.PI) * 14;
-        if (norm > 0.45 && norm < 0.7) {
-          // Dicrotic notch
-          plethVal += Math.sin((norm - 0.45) / 0.25 * Math.PI) * 3.2;
+        const isWrapped = gapEnd < gapStart;
+
+        ctx.beginPath();
+        let started = false;
+
+        for (let i = 0; i < width; i++) {
+          const inGap = isWrapped ? (i >= gapStart || i <= gapEnd) : (i >= gapStart && i <= gapEnd);
+          if (inGap) {
+            started = false;
+            continue;
+          }
+
+          const yPos = baseY - buffer[i];
+          if (!started) {
+            ctx.moveTo(i, yPos);
+            started = true;
+          } else {
+            ctx.lineTo(i, yPos);
+          }
         }
-      }
+        ctx.stroke();
+      };
 
-      // C. RESPIRATION WAVEFORM (Smooth sinusoidal capnography)
-      const respVal = Math.sin(t * 1.1) * 12 + Math.sin(t * 2.2) * 2;
+      // Draw 3 High-Contrast Clinical Channels
+      drawChannel(ecgBuffer, ch1Y, '#00e676', 'rgba(0, 230, 118, 0.6)');
+      drawChannel(spo2Buffer, ch2Y, '#00e5ff', 'rgba(0, 229, 255, 0.6)');
+      drawChannel(respBuffer, ch3Y, '#ffd600', 'rgba(255, 214, 0, 0.6)');
 
-      // 3. Render Next Step Segment
-      const nextX = (x + speed) % width;
-
-      // Draw ECG (Green)
-      ctx.beginPath();
-      ctx.strokeStyle = '#00e676';
-      ctx.lineWidth = 1.8;
-      ctx.shadowColor = '#00e676';
-      ctx.shadowBlur = 4;
-      ctx.moveTo(x, ch1Y - ecgVal);
-      ctx.lineTo(nextX, ch1Y - ecgVal);
-      ctx.stroke();
-
-      // Draw SpO2 (Cyan)
-      ctx.beginPath();
-      ctx.strokeStyle = '#00e5ff';
-      ctx.lineWidth = 1.8;
-      ctx.shadowColor = '#00e5ff';
-      ctx.shadowBlur = 4;
-      ctx.moveTo(x, ch2Y - plethVal);
-      ctx.lineTo(nextX, ch2Y - plethVal);
-      ctx.stroke();
-
-      // Draw Resp (Yellow)
-      ctx.beginPath();
-      ctx.strokeStyle = '#ffd600';
-      ctx.lineWidth = 1.8;
-      ctx.shadowColor = '#ffd600';
-      ctx.shadowBlur = 4;
-      ctx.moveTo(x, ch3Y - respVal);
-      ctx.lineTo(nextX, ch3Y - respVal);
-      ctx.stroke();
-
-      // Reset shadow for performance
+      // Draw Glowing Sweep Laser Line & Phosphor Fade at sweepHead
       ctx.shadowBlur = 0;
+      const grad = ctx.createLinearGradient(sweepHead, 0, sweepHead + sweepGap, 0);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+      grad.addColorStop(0.2, 'rgba(56, 189, 248, 0.08)');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(sweepHead, 0, sweepGap, height);
 
-      sweepXRef.current = nextX;
+      // Sweep Beam leading edge line
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(sweepHead, 0);
+      ctx.lineTo(sweepHead, height);
+      ctx.stroke();
+
       animFrameRef.current = requestAnimationFrame(render);
     };
 
@@ -191,7 +259,7 @@ export const VitalsMonitorWidget = ({ isPlaying, currentTime }) => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isPlaying, activeCase.id, currentTime]);
+  }, []);
 
   return (
     <section className="icu-monitor-console" aria-label="ICU Bedside Patient Monitor Console">
@@ -208,7 +276,7 @@ export const VitalsMonitorWidget = ({ isPlaying, currentTime }) => {
 
         <div className="icu-topbar-center">
           <span className="icu-status-text">
-            {isPlaying ? '● REALTIME CONTINUOUS TELEMETRY' : '⏸ PAUSED • STANDBY'}
+            {isPlaying ? '● REALTIME CONTINUOUS TELEMETRY' : '● REALTIME CONTINUOUS TELEMETRY'}
           </span>
           <span className="icu-grid-scale">25mm/s • GAIN 10mm/mV</span>
         </div>
