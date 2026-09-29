@@ -1,10 +1,9 @@
-import { useEffect, useRef } from 'react';
-import { useTheme } from '../context/ThemeContext';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Generates smooth 60fps ECG waveform favicon frames dynamically on an offscreen canvas.
- * - Dark theme (black background): White pulse waveform (#FFFFFF) for maximum contrast.
- * - Light theme (white background): Black pulse waveform (#000000) for maximum contrast.
+ * - System theme is dark (black browser tab bar): White pulse waveform (#FFFFFF) for maximum contrast.
+ * - System theme is light (white browser tab bar): Black pulse waveform (#000000) for maximum contrast.
  */
 function generateFramesForColor(color) {
   if (typeof document === 'undefined') return [];
@@ -125,13 +124,46 @@ const framesCache = {
 };
 
 export const useAnimatedFavicon = (frameInterval = 50) => {
-  const { theme } = useTheme();
+  const [isSystemDark, setIsSystemDark] = useState(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return true; // Default fallback to dark system theme
+  });
+
   const frameIndexRef = useRef(0);
 
+  // Real-time listener for user's OS / system theme changes
   useEffect(() => {
-    const isDark = theme === 'dark';
-    const color = isDark ? '#FFFFFF' : '#000000';
-    const cacheKey = isDark ? 'dark' : 'light';
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e) => {
+      setIsSystemDark(e.matches);
+    };
+
+    // Modern and legacy event listener support
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else if (mediaQuery.removeListener) {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  // Animate favicon frames based strictly on system theme
+  useEffect(() => {
+    // If system is Dark (black tabs): use crisp White icon (#FFFFFF)
+    // If system is Light (white tabs): use crisp Black icon (#000000)
+    const color = isSystemDark ? '#FFFFFF' : '#000000';
+    const cacheKey = isSystemDark ? 'dark' : 'light';
 
     if (!framesCache[cacheKey]) {
       framesCache[cacheKey] = generateFramesForColor(color);
@@ -147,7 +179,7 @@ export const useAnimatedFavicon = (frameInterval = 50) => {
       document.head.appendChild(link);
     }
 
-    // Set initial frame immediately upon theme change
+    // Set initial frame immediately upon system theme detection
     link.href = currentFrames[frameIndexRef.current % currentFrames.length];
 
     const intervalId = setInterval(() => {
@@ -156,5 +188,5 @@ export const useAnimatedFavicon = (frameInterval = 50) => {
     }, frameInterval);
 
     return () => clearInterval(intervalId);
-  }, [theme, frameInterval]);
+  }, [isSystemDark, frameInterval]);
 };
