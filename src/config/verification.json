@@ -1,0 +1,190 @@
+{
+  "date": "2026-09-22",
+  "ui": {
+    "checks": [
+      {
+        "check": "Exact labels and accessible names for all five use cases",
+        "pass": true,
+        "detail": [
+          [
+            "Positive Case",
+            "Negative Case"
+          ],
+          [
+            "Input",
+            "Model Inference Output"
+          ],
+          [
+            "Input",
+            "Model Inference Output"
+          ],
+          [
+            "Input",
+            "Model Inference Output"
+          ],
+          [
+            "Model Inference Output",
+            "Rule Based Vital Data Alerts"
+          ]
+        ]
+      },
+      {
+        "check": "Ten Windows paths and folder distinctions retained",
+        "pass": true,
+        "detail": true
+      },
+      {
+        "check": "Actual _V1 folder importer maps all ten test videos and autoplays",
+        "pass": true,
+        "detail": true
+      },
+      {
+        "check": "Selecting each use case starts both videos with correct Sync defaults",
+        "pass": true,
+        "detail": "Both clips start; defaults: independent, sync, sync, sync, independent."
+      },
+      {
+        "check": "Repeated independent loops play each full clip (2s and 3.6s)",
+        "pass": true,
+        "detail": {
+          "loops": {
+            "original": 4,
+            "output": 2
+          },
+          "videos": [
+            {
+              "paused": false,
+              "time": 0.152661,
+              "duration": 2
+            },
+            {
+              "paused": false,
+              "time": 0.885165,
+              "duration": 3.6
+            }
+          ]
+        }
+      },
+      {
+        "check": "Unequal-length synced pair restarts together without stopping",
+        "pass": true,
+        "detail": {
+          "samples": 12,
+          "maxTimeDifference": 0.0008019999999999972
+        }
+      },
+      {
+        "check": "Shared pause, seek, speed, play and restart controls retained",
+        "pass": true,
+        "detail": null
+      },
+      {
+        "check": "Native per-video pause is independent or paired according to Sync",
+        "pass": true,
+        "detail": null
+      },
+      {
+        "check": "Rapid switching, same-case restart and pause-during-load are stable",
+        "pass": true,
+        "detail": null
+      },
+      {
+        "check": "Narrative editor, notes, cues, all tabs, keyboard tab navigation and dialogs",
+        "pass": true,
+        "detail": null
+      },
+      {
+        "check": "Setup export/import round-trip and malformed-version rejection",
+        "pass": true,
+        "detail": "Existing schema v1 and video selection retained."
+      },
+      {
+        "check": "Replace/remove videos and restore through folder loading",
+        "pass": true,
+        "detail": null
+      },
+      {
+        "check": "Unsupported video recovery; healthy partner keeps playing",
+        "pass": true,
+        "detail": null
+      },
+      {
+        "check": "Presentation mode preserves playback controls and exits cleanly",
+        "pass": true,
+        "detail": null
+      },
+      {
+        "check": "All 5 cases x 3 tabs + 4 dialogs at seven viewport sizes",
+        "pass": true,
+        "detail": [
+          "1920x1080",
+          "1440x900",
+          "1280x720",
+          "1024x768",
+          "768x1024",
+          "390x844",
+          "320x740"
+        ]
+      },
+      {
+        "check": "Keyboard focus, reduced motion and reduced transparency",
+        "pass": true,
+        "detail": "Visible focus; motion disabled; opaque reduced-transparency surface."
+      },
+      {
+        "check": "No uncaught JavaScript errors",
+        "pass": true,
+        "detail": []
+      }
+    ],
+    "uncaughtErrors": []
+  },
+  "server": [
+    {
+      "check": "Configuration maps all ten exact paths; double space and folder distinctions preserved",
+      "pass": true,
+      "detail": 10
+    },
+    {
+      "check": "HTML routes, HEAD, MIME and local security headers",
+      "pass": true,
+      "detail": "Current and original HTML route names return the same updated app."
+    },
+    {
+      "check": "Manifest and all ten recording endpoints",
+      "pass": true,
+      "detail": "Every manifest URL returned its expected recording bytes."
+    },
+    {
+      "check": "Byte-range streaming, seeking support and 416 handling",
+      "pass": true,
+      "detail": "Five valid GET ranges, one HEAD range, and six invalid-range responses."
+    },
+    {
+      "check": "Read-only endpoint allowlist and origin checks",
+      "pass": true,
+      "detail": "No arbitrary files, directory listing, foreign-host/origin access or write endpoint."
+    },
+    {
+      "check": "Missing path detection and recovery",
+      "pass": true,
+      "detail": "Missing file is reported unavailable and has a clear 404, without substituting a recording."
+    },
+    {
+      "check": "Configured-root confinement",
+      "pass": true,
+      "detail": "Configuration traversal and outside-root symlink are rejected."
+    },
+    {
+      "check": "Python source parses under Python 3.9 grammar",
+      "pass": true,
+      "detail": true
+    }
+  ],
+  "limitations": [
+    "The user recordings were not available; short H.264 test clips were used.",
+    "UI executed in Chromium through an inline HTML test harness because managed browser policy blocked navigation to local URLs. No policy was changed.",
+    "Local HTTP endpoints were tested independently with actual HTTP requests. Windows end-to-end playback, Safari, Firefox, iOS and Android were not tested.",
+    "No medical validation or model inference was performed."
+  ]
+}

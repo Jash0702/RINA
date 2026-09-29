@@ -1,0 +1,31 @@
+/* ==========================================================================
+   THEME STYLES & ACCESSIBILITY HOOKS
+   ========================================================================== */
+
+/* High Contrast Mode */
+@media (prefers-contrast: more) {
+  :root {
+    --line: rgba(255, 255, 255, 0.35);
+    --line-strong: rgba(255, 255, 255, 0.60);
+    --line-soft: rgba(255, 255, 255, 0.20);
+    --surface-glass: var(--surface-1);
+    --nav-glass: var(--bg-subtle);
+  }
+
+  [data-theme="light"] {
+    --line: rgba(0, 0, 0, 0.35);
+    --line-strong: rgba(0, 0, 0, 0.60);
+    --line-soft: rgba(0, 0, 0, 0.20);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

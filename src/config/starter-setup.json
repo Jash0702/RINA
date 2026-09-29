@@ -1,0 +1,187 @@
+{
+  "schema": "icu-vision-demo",
+  "version": 1,
+  "cases": [
+    {
+      "id": "agitation",
+      "icon": "agitation",
+      "name": "Hyperactive delirium",
+      "navSubtitle": "Biomechanical agitation scoring",
+      "subtitle": "Real-time clinical agitation & motion quantification",
+      "overview": "Real-time ICU clinical agitation assessment and model-free biomechanical motion quantification pipeline. Integrates 33-point MediaPipe 3D Pose Tracking across 12 key joints with anatomical scale normalization (torso and bi-acromial distance) and lower-limb occlusion gating to compute a continuous 1.0–10.0 agitation rating scale mapped to clinical tiers (Calm to Severe Agitation).",
+      "signals": [
+        "12-Joint Biomechanical Velocity",
+        "Anatomical Scale Normalization",
+        "Lower-Limb Occlusion Gating",
+        "1.0–10.0 Agitation Gauge",
+        "Sliding Window Smoothing"
+      ],
+      "output": "Split-view patient skeletal wireframe with synchronized analytics dashboard: agitation score (1.0–10.0), upper/lower limb velocity meters, clinical tier classification, and historical waveform telemetry.",
+      "scope": "Continuous rating scale mapped to clinical tiers: 1.0–2.9 (Calm/Resting 🟢), 3.0–5.0 (Normal Active 🟡), 5.1–6.4 (Restless 🟠), 6.5–8.0 (Marked Agitation 🔴), 8.1–10.0 (Severe/Critical 🛑). Automatically gates to Upper-Body Dominant mode when bed blankets or rails obscure lower extremities to eliminate phantom tracking artifacts.",
+      "steps": [
+        {
+          "title": "3D Pose & Anatomical Scale Normalization",
+          "text": "Continuously tracks 12 key biomechanical joints using MediaPipe 3D pose estimation. Landmark displacements are dynamically normalized against patient torso length or bi-acromial diameter to maintain scale invariance across camera zoom and angles."
+        },
+        {
+          "title": "Lower-Limb Occlusion Gating",
+          "text": "Detects when lower extremities are covered by hospital blankets or bed rails. Automatically transitions scoring to an Upper-Body Dominant calculation, eliminating tracking artifacts and false-positive agitation alarms."
+        },
+        {
+          "title": "Clinical Tier Classification & Waveform Analytics",
+          "text": "Maps instantaneous and sliding-window smoothed velocities onto a calibrated 1.0–10.0 agitation scale, logging upper/lower/whole body kinetics and 3D spatial world coordinates at 30+ FPS."
+        }
+      ],
+      "notes": "Biomechanical Engine: 33-point MediaPipe 3D Pose Tracking across 12 key joints (shoulders, elbows, wrists, hips, knees, ankles).\nScale Invariance: Dynamic torso-length normalization prevents camera perspective bias.\nOcclusion Gating: Auto-switches to upper-body dominant mode when blankets cover legs.\nClinical Tiers: 1.0–2.9 (Calm 🟢), 3.0–5.0 (Normal 🟡), 5.1–6.4 (Restless 🟠), 6.5–8.0 (Marked Agitation 🔴), 8.1–10.0 (Severe/Critical 🛑).\nDual Telemetry: Real-time kinetic velocity logging and 3D coordinate CSV export.",
+      "cues": []
+    },
+    {
+      "id": "seatbelt",
+      "icon": "belt",
+      "name": "Risk Seatbelt Monitoring",
+      "navSubtitle": "Belt compliance & safety",
+      "subtitle": "Edge-AI real-time driver seatbelt compliance",
+      "overview": "Real-time, CPU-optimized computer vision system for driver seatbelt compliance and cabin safety. Powered by an INT8-quantized YOLOv8s neural engine (11.5 MB), 2-stage CLAHE torso contrast equalization, and MediaPipe hand tracking, achieving a 94.2% F1-score at 30–45 FPS on edge hardware without GPU requirements.",
+      "signals": [
+        "INT8 YOLOv8 Detection",
+        "2-Stage CLAHE Torso Crop",
+        "8-Frame FIFO Smoothing",
+        "5.0s Verification Timer",
+        "MediaPipe Hand Tracking"
+      ],
+      "output": "Driver torso bounding boxes, seatbelt compliance classification (95.4% precision, 93.1% recall), and 8-frame temporally smoothed violation alerts with confidence scores.",
+      "scope": "Engineered for zero-lag edge CPU deployment (<25ms inference latency, <350MB RAM). Employs an 8-frame sliding FIFO window (>=6/8 threshold) and a 5.0-second continuous verification delay to eliminate transient false alarms caused by motion blur or rapid head turns.",
+      "steps": [
+        {
+          "title": "Quantized INT8 YOLOv8 Architecture",
+          "text": "Frames are processed via an INT8-quantized YOLOv8s neural network with AVX-512 SIMD vector acceleration, reducing memory footprint by 74.3% (11.5 MB) and delivering 30–45 FPS on standard CPU hardware."
+        },
+        {
+          "title": "2-Stage CLAHE Torso Enhancement",
+          "text": "When dark seatbelts overlap dark clothing in dim vehicle cabin lighting, a localized torso crop in LAB color space applies Contrast Limited Adaptive Histogram Equalization (CLAHE) on the luminance channel before re-inference."
+        },
+        {
+          "title": "8-Frame FIFO Smoothing & 5s Timer",
+          "text": "Detections feed into an 8-frame sliding FIFO queue requiring >=6/8 agreement, followed by a monotonic 5.0-second continuous violation timer before triggering visual banners, audio alerts, and asynchronous PostgreSQL database logging."
+        }
+      ],
+      "notes": "System Architecture: INT8 Quantized YOLOv8s + CLAHE + MediaPipe\nModel Size: 11.5 MB (74.3% reduction from 44.8 MB FP32 baseline)\nInference Speed: 30–45 FPS on CPU (22.1 ms frame latency, 21.4% CPU utilization)\nDetection Accuracy: 94.2% F1-score (Seatbelt Worn: 95.4% P / 93.1% R; No Seatbelt: 93.8% P / 92.5% R)\nRobustness: 2-Stage CLAHE torso crop overcomes low-contrast dark attire; 8-frame FIFO smoothing + 5.0s verification delay prevents motion-blur flicker.",
+      "cues": []
+    },
+    {
+      "id": "pressure",
+      "icon": "pressure",
+      "name": "Pressure Injury",
+      "navSubtitle": "Prolonged immobility",
+      "subtitle": "Prolonged immobility & missed repositioning",
+      "overview": "Compare visible posture and movement with posture labels or elapsed-time overlays already produced by your model. Keep the focus on immobility and repositioning, not sleep itself.",
+      "signals": [
+        "Posture persistence",
+        "Turn events",
+        "Visibility gaps"
+      ],
+      "output": "Posture labels, observed turn events, or immobility timers, where your supplied recording includes them.",
+      "scope": "Repositioning schedules should reflect the individual care plan. Video alone does not measure tissue pressure or confirm a pressure injury. Chart or smart-bed inputs are not connected in this demo.",
+      "steps": [
+        {
+          "title": "Observe posture over time",
+          "text": "Use the camera recording to describe visible posture and gross movement. Account for periods when the patient cannot be assessed."
+        },
+        {
+          "title": "Show your temporal output",
+          "text": "Replay any posture, turning, or elapsed-time annotation produced by your model. Explain your actual event and timer definitions."
+        },
+        {
+          "title": "Describe the prevention workflow",
+          "text": "Explain how your intended workflow would support a repositioning review alongside the care plan and relevant clinical information."
+        }
+      ],
+      "notes": "Explain why the target is prolonged immobility, not sleep.\nShow posture and any observed repositioning.\nPoint to the elapsed-time overlay only if your model provides one.\nIdentify which inputs are video-derived and which would require other systems.",
+      "cues": []
+    },
+    {
+      "id": "fall",
+      "icon": "fall",
+      "name": "Bed Fall Risk",
+      "navSubtitle": "Bed-edge & exit behaviors",
+      "subtitle": "Bed-edge movement & attempted exit",
+      "overview": "Present bed-position changes alongside the annotated output to show how potential bed-exit behaviors are surfaced for review.",
+      "signals": [
+        "Bed-edge proximity",
+        "Sit-up transitions",
+        "Exit-attempt cues"
+      ],
+      "output": "Bed-region boundaries, posture annotations, or bed-exit event labels, when available in the supplied recording.",
+      "scope": "A movement cue is not proof that a fall will occur. Interpret the event with the patient's mobility, assistance, and care context. No fall alarm is generated by this workspace.",
+      "steps": [
+        {
+          "title": "Establish the bed region",
+          "text": "Use the original recording to orient the audience to the bed, patient, and visible scene boundaries."
+        },
+        {
+          "title": "Compare movement and labels",
+          "text": "Replay your model's position or bed-exit annotations. Describe the model, calibration, and persistence logic actually used."
+        },
+        {
+          "title": "Explain the review trigger",
+          "text": "Discuss the specific observed behavior that your intended workflow would surface to staff, including uncertain or assisted movements."
+        }
+      ],
+      "notes": "Orient the audience to the bed and the camera view.\nPoint out the movement toward an edge or an attempted exit.\nCompare the same timestamp in the output.\nExplain how assisted movement and occlusion are handled.",
+      "cues": []
+    },
+    {
+      "id": "ventilator",
+      "icon": "airway",
+      "name": "Tube Extubation",
+      "navSubtitle": "Data alerts & extubation risk",
+      "subtitle": "Extubation risk & rule-based vital data alerts",
+      "overview": "Present the tube-extubation Model Inference Output alongside the Rule Based Vital Data Alerts recording. Keep camera-derived annotations separate from the recorded rules applied to vital data.",
+      "signals": [
+        "Device-data alerts",
+        "Hand-to-tube proximity",
+        "Visible tube interaction"
+      ],
+      "output": "Your rendered device-data visualization or tube-interaction annotations. Include source labels so the audience knows where each signal comes from.",
+      "scope": "Visible tube interaction alone does not confirm displacement or extubation. This page has no ventilator connection and must not replace device alarms or bedside assessment.",
+      "steps": [
+        {
+          "title": "Identify each data source",
+          "text": "Explain which part of the recording is camera footage and which part is a recorded ventilator-data visualization."
+        },
+        {
+          "title": "Replay the composed output",
+          "text": "Show your pre-rendered output with its annotations or device-data labels. Describe the actual processing used for each data source."
+        },
+        {
+          "title": "Separate cue from confirmation",
+          "text": "Explain the intended human review for the observed event. The demo neither detects a confirmed extubation nor generates a live ventilator alarm."
+        }
+      ],
+      "notes": "Distinguish camera-derived cues from ventilator-data alerts.\nShow the relevant timestamp in both recordings.\nExplain what the model can and cannot verify.\nState that the demonstration has no live ventilator connection.",
+      "cues": []
+    }
+  ],
+  "fileHints": {
+    "agitation": {
+      "original": "_modeloutput.mp4",
+      "output": "_modeloutput.mp4"
+    },
+    "seatbelt": {
+      "original": "_Orginal.mp4",
+      "output": "_ModelOutput.mp4"
+    },
+    "pressure": {
+      "original": "_Orginal.mp4",
+      "output": "_ModelOutput.mp4"
+    },
+    "fall": {
+      "original": "_Orginal.mp4",
+      "output": "_ModelOutput.mp4"
+    },
+    "ventilator": {
+      "original": "_ModelOutput.mp4",
+      "output": "ETCo2Vitals.mp4"
+    }
+  }
+}
