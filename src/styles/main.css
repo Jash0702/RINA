@@ -3490,6 +3490,16 @@ dialog.dialog-shell::backdrop {
   .icu-monitor-body {
     grid-template-columns: 1fr 280px;
   }
+
+  .bento-steps-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .intelligence-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
 }
 
 /* MOBILE PHONES & SMALL TABLETS (<= 900px) */
@@ -3510,8 +3520,8 @@ dialog.dialog-shell::backdrop {
     min-width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
-    max-height: 72px;
-    padding: 8px 12px;
+    max-height: 68px;
+    padding: 6px 10px;
     border-right: none;
     border-bottom: 1px solid var(--line);
     flex-direction: row;
@@ -3539,9 +3549,9 @@ dialog.dialog-shell::backdrop {
   }
 
   .case-item {
-    padding: 6px 12px;
+    padding: 5px 10px;
     gap: 8px;
-    min-width: 180px;
+    min-width: 170px;
     flex-shrink: 0;
     border-radius: var(--radius-sm);
   }
@@ -3573,7 +3583,7 @@ dialog.dialog-shell::backdrop {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Video Grid: Auto-stack vertically on mobile so neither video is squished */
+  /* Video Grid: Auto-stack vertically on mobile */
   .video-grid.layout-compare {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -3585,6 +3595,79 @@ dialog.dialog-shell::backdrop {
 
   .video-viewport {
     aspect-ratio: 16 / 9;
+  }
+
+  /* Presentation Steps & Intelligence Grid */
+  .bento-steps-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .intelligence-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .bento-step-card {
+    padding: 14px 16px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .bento-step-heading {
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .bento-step-text {
+    font-size: 12.5px;
+    line-height: 1.6;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Transport Bar: Full Stacked Responsive Layout */
+  .transport {
+    padding: 10px 12px;
+    gap: 8px;
+    border-radius: var(--radius-md);
+  }
+
+  .transport-row.main-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .transport-group.timeline-group {
+    width: 100%;
+    order: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .timeline-container {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .transport-group.playback-buttons {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .transport-group.secondary-controls {
+    order: 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 }
 
@@ -3730,30 +3813,58 @@ dialog.dialog-shell::backdrop {
     font-size: 15px;
   }
 
-  /* Transport & Scrubbing Controls */
+  /* Transport: Split top timeline, bottom buttons row */
   .transport {
     padding: 10px 12px;
     gap: 8px;
     border-radius: var(--radius-md);
   }
 
-  .transport-main-row {
+  .transport-row.main-controls {
+    display: flex;
     flex-direction: column;
     gap: 8px;
   }
 
-  .transport-left-controls {
+  .transport-group.timeline-group {
+    order: 1;
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Bottom Controls Sub-row wrapper on mobile */
+  .transport-row.main-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
   }
 
-  .transport-right-tools {
-    width: 100%;
-    justify-content: space-between;
+  .transport-group.playback-buttons {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
-  .scrubber-wrapper {
-    padding: 8px 0;
+  .transport-group.secondary-controls {
+    order: 3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sync-btn {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .speed-selector {
+    height: 28px;
+    padding: 0 4px;
+    font-size: 10.5px;
   }
 
   /* Brief Panel */
@@ -3804,6 +3915,14 @@ dialog.dialog-shell::backdrop {
   }
 
   .case-item {
-    min-width: 150px;
+    min-width: 140px;
+  }
+
+  .sync-btn span {
+    display: none;
+  }
+
+  .sync-btn {
+    padding: 6px 8px;
   }
 }
