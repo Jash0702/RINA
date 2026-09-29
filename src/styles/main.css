@@ -741,6 +741,10 @@ svg {
   transition: all var(--transition-normal);
 }
 
+.mobile-case-trigger-bar {
+  display: none !important;
+}
+
 .app-shell.presentation .sidebar {
   width: 0;
   min-width: 0;
@@ -3514,64 +3518,398 @@ dialog.dialog-shell::backdrop {
     overflow: hidden;
   }
 
-  /* Transform Left Sidebar into Top Horizontal Swipeable Carousel */
-  .sidebar {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    max-height: 68px;
-    padding: 6px 10px;
-    border-right: none;
-    border-bottom: 1px solid var(--line);
-    flex-direction: row;
+  /* Desktop Sidebar Hidden on Mobile (Option 1 replaces it with sleek trigger pill) */
+  .desktop-sidebar {
+    display: none !important;
+  }
+
+  /* -------------------------------------------------------------
+     OPTION 1: MOBILE USE CASE TRIGGER PILL
+     ------------------------------------------------------------- */
+  .mobile-case-trigger-bar {
+    display: block !important;
+    width: 100%;
+    padding: 10px 12px 4px;
+    flex-shrink: 0;
+    z-index: 20;
+    background: transparent;
+  }
+
+  .mobile-case-trigger-btn {
+    width: 100%;
+    display: flex;
     align-items: center;
-    overflow-x: auto;
-    overflow-y: hidden;
+    justify-content: space-between;
+    padding: 9px 12px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.90) 0%, rgba(30, 41, 59, 0.80) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-case-trigger-btn:active {
+    transform: scale(0.985);
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.92) 100%);
+  }
+
+  .mobile-trigger-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .mobile-trigger-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--primary-hover);
+    text-transform: uppercase;
+  }
+
+  .mobile-trigger-name-group {
+    display: flex;
+    align-items: center;
     gap: 8px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    min-width: 0;
   }
 
-  .sidebar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .wm-sidebar-header {
-    display: none;
-  }
-
-  .case-list {
-    flex-direction: row;
-    gap: 8px;
-    flex-shrink: 0;
-    width: max-content;
-  }
-
-  .case-item {
-    padding: 5px 10px;
-    gap: 8px;
-    min-width: 170px;
-    flex-shrink: 0;
-    border-radius: var(--radius-sm);
-  }
-
-  .case-desc {
-    display: none;
-  }
-
-  .case-name {
-    font-size: 11.5px;
-  }
-
-  .case-icon-box {
+  .mobile-trigger-icon {
     width: 24px;
     height: 24px;
+    border-radius: 6px;
+    background: rgba(6, 182, 212, 0.14);
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-hover);
+    flex-shrink: 0;
   }
 
-  .case-icon-box svg {
+  .mobile-trigger-icon svg {
     width: 14px;
     height: 14px;
+  }
+
+  .mobile-trigger-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.2px;
+  }
+
+  .mobile-trigger-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .mobile-trigger-live-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 20px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    letter-spacing: 0.5px;
+  }
+
+  .mobile-live-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px #10b981;
+    animation: livePulse 1.4s infinite ease-in-out;
+  }
+
+  .mobile-trigger-chevron-box {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+
+  .mobile-case-trigger-btn:hover .mobile-trigger-chevron-box {
+    background: rgba(6, 182, 212, 0.2);
+    color: var(--primary-hover);
+  }
+
+  /* -------------------------------------------------------------
+     OPTION 1: iOS-STYLE MOBILE BOTTOM SHEET DRAWER MODAL
+     ------------------------------------------------------------- */
+  .mobile-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(2, 6, 23, 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    animation: drawerOverlayFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes drawerOverlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .mobile-drawer-sheet {
+    background: linear-gradient(180deg, #111827 0%, #090e1a 100%);
+    border-top: 1px solid rgba(6, 182, 212, 0.35);
+    border-radius: 24px 24px 0 0;
+    padding: 12px 16px 32px;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 -14px 48px rgba(0, 0, 0, 0.8), 0 -2px 18px rgba(6, 182, 212, 0.18);
+    animation: drawerSheetSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    overflow: hidden;
+  }
+
+  @keyframes drawerSheetSlideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .mobile-drawer-handle-bar {
+    width: 40px;
+    height: 4.5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.25);
+    margin: 0 auto;
+    flex-shrink: 0;
+  }
+
+  .mobile-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-drawer-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mobile-drawer-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+
+  .mobile-drawer-count {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--primary-hover);
+  }
+
+  .mobile-drawer-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-drawer-close-btn:active {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+  }
+
+  .mobile-drawer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    max-height: calc(82vh - 120px);
+    -webkit-overflow-scrolling: touch;
+    padding-right: 2px;
+  }
+
+  .mobile-drawer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: left;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+  }
+
+  .mobile-drawer-item:active {
+    transform: scale(0.985);
+  }
+
+  .mobile-drawer-item.active {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.16) 0%, rgba(16, 185, 129, 0.09) 100%);
+    border-color: rgba(6, 182, 212, 0.55);
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .drawer-item-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--dim);
+    flex-shrink: 0;
+    width: 20px;
+  }
+
+  .mobile-drawer-item.active .drawer-item-badge {
+    color: var(--primary-hover);
+  }
+
+  .drawer-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .drawer-item-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mobile-drawer-item.active .drawer-item-icon {
+    background: rgba(6, 182, 212, 0.2);
+    border-color: rgba(6, 182, 212, 0.5);
+    color: var(--primary-hover);
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+  }
+
+  .drawer-item-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .drawer-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .drawer-item-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+
+  .mobile-drawer-item.active .drawer-item-name {
+    color: #fff;
+    font-weight: 800;
+  }
+
+  .drawer-active-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 12px;
+    background: rgba(6, 182, 212, 0.18);
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    color: var(--primary-hover);
+  }
+
+  .drawer-live-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--primary-hover);
+    box-shadow: 0 0 6px var(--primary-hover);
+  }
+
+  .drawer-item-sub {
+    font-size: 11px;
+    color: var(--dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-drawer-item.active .drawer-item-sub {
+    color: var(--muted);
+  }
+
+  .drawer-item-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #030712;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+  }
+
+  .drawer-item-check svg {
+    width: 13px;
+    height: 13px;
+    stroke-width: 2.5;
   }
 
   /* Workspace Scroll Container */
