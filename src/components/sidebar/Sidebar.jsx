@@ -31,12 +31,6 @@ export const Sidebar = () => {
                 className={`case-item ${isActive ? 'active' : ''}`}
                 onClick={() => selectCase(idx)}
               >
-                {/* Vengence UI Ambient Inner Glow */}
-                <div className="case-ambient-glow" aria-hidden="true" />
-
-                {/* Vengence UI Sweeping Border Shine */}
-                <div className="case-border-beam" aria-hidden="true" />
-
                 <div className="case-index-badge">
                   <span>{String(idx + 1).padStart(2, '0')}</span>
                 </div>
@@ -66,12 +60,19 @@ export const Sidebar = () => {
 
         <div className="sidebar-bottom">
           <div className="sidebar-footnote">
+            <div className="sidebar-system-info">
+              <div className="sidebar-system-row">
+                <span className="sys-label">SYSTEM</span>
+                <span className="sys-val">ONLINE • ICU MONITOR</span>
+              </div>
+              <div className="sidebar-system-row">
+                <span className="sys-label">VERSION</span>
+                <span className="sys-val">v2.4.0 (BUILD 605)</span>
+              </div>
+            </div>
             <div className="sidebar-brand-pill">
               <Icon name="logo" />
-              <span>RINA ICU Intelligence</span>
-            </div>
-            <div className="sidebar-footer-quote">
-              <span className="quote-text">“AI for a Safer, Healthier Tomorrow”</span>
+              <span>Rtwo Healthcare Solutions</span>
             </div>
           </div>
         </div>

@@ -24,14 +24,6 @@ export const App = () => {
         <Workspace />
       </div>
 
-      {/* Option 4: Ambient Liquid Glass Light Orbs */}
-      <div className="liquid-ambient-bg" aria-hidden="true">
-        <div className="ambient-orb orb-cyan" />
-        <div className="ambient-orb orb-emerald" />
-        <div className="ambient-orb orb-blue" />
-        <div className="ambient-orb orb-violet" />
-      </div>
-
       {/* Modals & Dialogs */}
       <ManageFilesModal />
       <EditNarrativeModal />
