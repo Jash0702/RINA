@@ -59,8 +59,8 @@ export const HeroBanner = () => {
       <div className="wm-hero-top-row">
         <div className="wm-hero-copy">
           <div className="wm-hero-kicker">
-            <span className="wm-hero-pill">USE CASE {String(activeIndex + 1).padStart(2, '0')} / {String(cases.length).padStart(2, '0')}</span>
-            <span className="wm-hero-category">CLINICAL VISION INTELLIGENCE</span>
+            <span className="wm-hero-pill">PROTOCOL {String(activeIndex + 1).padStart(2, '0')} / {String(cases.length).padStart(2, '0')}</span>
+            <span className="wm-hero-category">ICU CLINICAL MONITORING</span>
           </div>
           <h2 className="wm-hero-title">{activeCase.name}</h2>
           <p className="wm-hero-subtitle">{activeCase.subtitle}</p>

@@ -73,7 +73,7 @@ export const BriefPanel = ({ onSeek }) => {
             onClick={() => setActiveTab('signals')}
           >
             <Icon name="video" />
-            <span>Signals & Inference</span>
+            <span>Signals & Telemetry</span>
           </button>
 
           <button
@@ -190,7 +190,7 @@ export const BriefPanel = ({ onSeek }) => {
                     </span>
                     <h3>How It Works</h3>
                   </div>
-                  <span className="how-badge">VISION-AI PIPELINE</span>
+                  <span className="how-badge">DETECTION METHODOLOGY</span>
                 </div>
                 <p className="usecase-description" id="how-desc">
                   {activeCase.howItWorks}
